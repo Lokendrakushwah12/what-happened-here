@@ -1,6 +1,4 @@
 "use client";
-import { useEffect, useState } from "react";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -11,10 +9,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { YearPicker } from "./YearPicker";
 import { getHistory } from "@/server/action";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { YearPicker } from "./YearPicker";
 
 interface Event {
   title: string;
@@ -106,7 +106,7 @@ export function DataForm({
         <FormField
           control={form.control}
           name="year"
-          render={({ field }) => (
+          render={() => (
             <FormItem className="w-full flex flex-col">
               <FormLabel className="text-neutral-400 font-[400]">
                 Year you want to check in

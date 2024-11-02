@@ -17,11 +17,8 @@ export type CalendarProps = Omit<
 
 function Calendar({
   className,
-  classNames,
-  showOutsideDays = false, // Hiding outside days for simplicity
   onSelect,
   year,
-  ...props
 }: CalendarProps) {
   const currentYear = new Date().getFullYear();
   const [displayYear, setDisplayYear] = React.useState(currentYear);
