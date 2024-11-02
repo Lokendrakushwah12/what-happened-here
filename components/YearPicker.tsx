@@ -31,7 +31,7 @@ export function YearPicker({
         <Button
           variant="outline"
           className={cn(
-            "justify-between items-center rounded-xl flex bg-neutral-900 text-neutral-500 hover:text-neutral-400 hover:bg-neutral-800 border-0 w-full text-left font-normal",
+            "justify-between items-center rounded-xl flex bg-neutral-900 text-neutral-200 hover:text-neutral-300 hover:bg-neutral-800 border-0 w-full text-left font-normal",
             !year && "text-neutral-500"
           )}
           onClick={() => setIsOpen((prev) => !prev)}

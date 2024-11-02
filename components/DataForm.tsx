@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -14,51 +15,76 @@ import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { YearPicker } from "./YearPicker";
+import { getHistory } from "@/server/action";
 
 const formSchema = z.object({
-  username: z.string().min(2, {
-    message: "Username must be at least 2 characters.",
-  }),
-  year: z.number().max(new Date().getFullYear(), {
-    message: "Please enter a valid year.",
-  }),
-  longitude: z.string().min(1, {
+  year: z
+    .number()
+    .min(1, {
+      message: "Year is required.",
+    })
+    .max(new Date().getFullYear(), {
+      message: "Please enter a valid year.",
+    }),
+  longitude: z.number().min(1, {
     message: "Longitude is required.",
   }),
-  latitude: z.string().min(1, {
+  latitude: z.number().min(1, {
     message: "Latitude is required.",
   }),
 });
 
-export function DataForm() {
+export function DataForm({
+  setHistoryData,
+}: {
+  setHistoryData: (data: string) => void;
+}) {
+  const [btnloading, setBtnLoading] = useState(false);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: "",
       year: new Date().getFullYear(),
-      longitude: "",
-      latitude: "",
+      longitude: 0,
+      latitude: 0,
     },
   });
 
   const { setValue } = form;
 
-  // Handle form submission
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    const { year, ...rest } = values;
-    const selectedYear = parseInt(year as unknown as string, 10);
-    const today = new Date();
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setValue("longitude", position.coords.longitude);
+          setValue("latitude", position.coords.latitude);
+        },
+        (error) => {
+          console.error("Error fetching location: ", error);
+        }
+      );
+    } else {
+      console.warn("Geolocation is not supported by this browser.");
+    }
+  }, [setValue]);
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setBtnLoading(true);
+    const { year, longitude, latitude } = values;
     const selectedDate = new Date(
-      selectedYear,
-      today.getMonth(),
-      today.getDate()
+      year,
+      new Date().getMonth(),
+      new Date().getDate()
     );
 
-    console.log({
-      ...rest,
-      year: selectedYear,
-      selectedDate,
-    });
+    try {
+      const data = await getHistory(selectedDate, latitude, longitude);
+      setHistoryData(data);
+    } catch (error) {
+      console.error("Failed to fetch history:", error);
+      setHistoryData("Error fetching historical data.");
+    } finally {
+      setBtnLoading(false);
+    }
   }
 
   return (
@@ -69,37 +95,17 @@ export function DataForm() {
       >
         <FormField
           control={form.control}
-          name="username"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-neutral-400 font-[400]">
-                Username
-              </FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Enter your username"
-                  {...field}
-                  className="bg-neutral-900 hover:bg-neutral-800 focus:bg-neutral-800 border-0 rounded-xl text-gray-100"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
           name="year"
           render={({ field }) => (
             <FormItem className="w-full flex flex-col">
               <FormLabel className="text-neutral-400 font-[400]">
-                Year you want to check
+                Year you want to check in
               </FormLabel>
               <FormControl>
                 <YearPicker
                   onYearSelect={(selectedYear) =>
                     setValue("year", selectedYear)
-                  } // Update the year in form state
+                  }
                 />
               </FormControl>
               <FormMessage />
@@ -152,9 +158,10 @@ export function DataForm() {
         <Button
           variant="secondary"
           type="submit"
-          className="w-full select-none"
+          className={`w-full select-none ${btnloading ? "cursor-not-allowed" : ""} `}
+          disabled={btnloading}
         >
-          Submit
+          {btnloading ? "Loading..." : "Submit"}
         </Button>
       </form>
     </Form>
