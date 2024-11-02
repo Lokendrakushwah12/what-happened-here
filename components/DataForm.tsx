@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import { z } from "zod";
-
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -17,6 +16,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { YearPicker } from "./YearPicker";
 import { getHistory } from "@/server/action";
 
+interface Event {
+  title: string;
+  description: string;
+}
+
+interface HistoryData {
+  date: string;
+  location: string;
+  events: Event[];
+}
+
 const formSchema = z.object({
   year: z
     .number()
@@ -26,10 +36,10 @@ const formSchema = z.object({
     .max(new Date().getFullYear(), {
       message: "Please enter a valid year.",
     }),
-  longitude: z.number().min(1, {
+  longitude: z.number().min(-180, {
     message: "Longitude is required.",
   }),
-  latitude: z.number().min(1, {
+  latitude: z.number().min(-90, {
     message: "Latitude is required.",
   }),
 });
@@ -37,7 +47,7 @@ const formSchema = z.object({
 export function DataForm({
   setHistoryData,
 }: {
-  setHistoryData: (data: string) => void;
+  setHistoryData: (data: HistoryData | null) => void; // Ensure this matches your HistoryData type
 }) {
   const [btnloading, setBtnLoading] = useState(false);
   const form = useForm<z.infer<typeof formSchema>>({
@@ -78,10 +88,10 @@ export function DataForm({
 
     try {
       const data = await getHistory(selectedDate, latitude, longitude);
-      setHistoryData(data);
+      setHistoryData(data); // Ensure that data conforms to HistoryData
     } catch (error) {
       console.error("Failed to fetch history:", error);
-      setHistoryData("Error fetching historical data.");
+      setHistoryData(null); // Handle error state accordingly
     } finally {
       setBtnLoading(false);
     }
@@ -158,7 +168,7 @@ export function DataForm({
         <Button
           variant="secondary"
           type="submit"
-          className={`w-full select-none ${btnloading ? "cursor-not-allowed" : ""} `}
+          className={`w-full select-none ${btnloading ? "cursor-not-allowed" : ""}`}
           disabled={btnloading}
         >
           {btnloading ? "Loading..." : "Submit"}

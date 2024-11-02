@@ -2,8 +2,19 @@
 import { DataForm } from "@/components/DataForm";
 import { useState } from "react";
 
+interface Event {
+  title: string;
+  description: string;
+}
+
+interface HistoryData {
+  date: string;
+  location: string;
+  events: Event[];
+}
+
 export default function Home() {
-  const [historyData, setHistoryData] = useState<any | null>(null);
+  const [historyData, setHistoryData] = useState<HistoryData | null>(null);
 
   return (
     <div className="flex flex-col md:px-0 px-4 items-center justify-start min-h-screen bg-primary py-24">
@@ -13,17 +24,24 @@ export default function Home() {
 
       <DataForm setHistoryData={setHistoryData} />
       {historyData && (
-        <div className="mt-8 p-4 w-full max-w-lg rounded-lg bg-neutral-900 text-white">
-          <h3 className="text-lg font-semibold mb-2">Historical Data</h3>
-          <h4>{historyData.date}</h4>
-          <p>{historyData.location}</p>
+        <div className="mt-8 p-4 w-full max-w-lg flex flex-col justify-center items-start gap-2 rounded-lg bg-neutral-900 text-white">
+          <h3 className="text-lg font-semibold">Historical Data</h3>
+          <div className="w-full h-[1px] bg-neutral-800"></div>
+          <h4 className="bg-blue-600/10 select-none p-1 rounded-sm px-2 border border-blue-600/20">
+            {historyData.date}
+          </h4>
+          <p className="text-neutral-500">{historyData.location}</p>
           <ul>
             {Array.isArray(historyData.events) &&
             historyData.events.length > 0 ? (
-              historyData.events.map((event: any, index: number) => (
+              historyData.events.map((event, index) => (
                 <li key={index}>
-                  <strong>{event.title || "No Title"}</strong>:{" "}
-                  {event.description || "No Description"}
+                  <div className="text-neutral-300 font-[500]">
+                    {event.title || "No Title"}:
+                  </div>
+                  <p className="text-neutral-400">
+                    {event.description || "No Description"}
+                  </p>
                 </li>
               ))
             ) : (
